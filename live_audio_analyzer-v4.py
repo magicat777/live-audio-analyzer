@@ -861,7 +861,7 @@ class PipeWireMonitorCapture:
 class VoiceReactiveLiveAudioAnalyzer:
     """Enhanced live audio analyzer with industry-grade voice and beat detection"""
     
-    def __init__(self, width=1600, height=900, bars=BARS_DEFAULT, source_name=None):
+    def __init__(self, width=2000, height=900, bars=BARS_DEFAULT, source_name=None):
         self.width = width
         self.height = height
         self.bars = bars
@@ -1781,7 +1781,7 @@ class VoiceReactiveLiveAudioAnalyzer:
 
 def main():
     parser = argparse.ArgumentParser(description='Voice & Beat Analyzer v4 - Industry-Grade Detection')
-    parser.add_argument('--width', type=int, default=1600, help='Window width')
+    parser.add_argument('--width', type=int, default=2000, help='Window width')
     parser.add_argument('--height', type=int, default=900, help='Window height')
     parser.add_argument('--bars', type=int, default=512, help='Number of spectrum bars')
     parser.add_argument('--source', type=str, default=None, help='PipeWire source name')
