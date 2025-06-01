@@ -941,6 +941,14 @@ class VoiceReactiveLiveAudioAnalyzer:
         print("  F: Toggle formant display")
         print("  A: Toggle advanced info")
         print("  G: Toggle groove info")
+        print("Window Sizes:")
+        print("  1: Compact (1200x720)")
+        print("  2: Standard (1600x900)")
+        print("  3: Wide (2000x900) - Default")
+        print("  4: Extra Wide (2400x1080)")
+        print("  5: Ultra Wide (2880x1200)")
+        print("  6: Professional (3200x1440)")
+        print("Debug Controls:")
         print("  D: Debug spectrum snapshot to terminal")
         print("  T: Toggle auto debug output (every 3s)")
         print("  K/N: Kick/Snare debug")
@@ -1644,6 +1652,13 @@ class VoiceReactiveLiveAudioAnalyzer:
                     return i
         return None
     
+    def resize_window(self, new_width: int, new_height: int):
+        """Resize the window to a new size"""
+        self.width = new_width
+        self.height = new_height
+        self.screen = pygame.display.set_mode((new_width, new_height), pygame.RESIZABLE)
+        print(f"📏 Window resized to {new_width}x{new_height}")
+    
     def run(self):
         """Main enhanced analysis loop"""
         # Start audio capture
@@ -1690,6 +1705,24 @@ class VoiceReactiveLiveAudioAnalyzer:
                             # Toggle groove info
                             self.show_groove_info = not self.show_groove_info
                             print(f"🎼 Groove info: {'ON' if self.show_groove_info else 'OFF'}")
+                        elif event.key == pygame.K_1:
+                            # Window size 1: Compact (1200x720)
+                            self.resize_window(1200, 720)
+                        elif event.key == pygame.K_2:
+                            # Window size 2: Standard (1600x900)
+                            self.resize_window(1600, 900)
+                        elif event.key == pygame.K_3:
+                            # Window size 3: Wide (2000x900) - Default
+                            self.resize_window(2000, 900)
+                        elif event.key == pygame.K_4:
+                            # Window size 4: Extra Wide (2400x1080)
+                            self.resize_window(2400, 1080)
+                        elif event.key == pygame.K_5:
+                            # Window size 5: Ultra Wide (2880x1200)
+                            self.resize_window(2880, 1200)
+                        elif event.key == pygame.K_6:
+                            # Window size 6: Full Professional (3200x1440)
+                            self.resize_window(3200, 1440)
                         elif event.key == pygame.K_d:
                             # Debug spectrum snapshot to terminal
                             self.debug_spectrum_snapshot_to_terminal()
