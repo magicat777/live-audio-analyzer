@@ -109,8 +109,10 @@ class IndustryVoiceDetector:
                     results['has_voice'] = True
                     if self.pitch_history:
                         results['pitch'] = self.pitch_history[-1]
-                        # Ensure cached pitch has reasonable confidence
-                        results['voice_confidence'] = 0.4  # Reasonable confidence for cached pitch
+                        # Use a more dynamic confidence for cached pitch based on recent performance
+                        results['voice_confidence'] = min(0.7, max(0.3, len(self.pitch_history) / 30.0))
+                        # Add voice classification for cached pitch
+                        results['voice_type'] = self.voice_classifier.classify_voice_type(results['pitch'], [])
             
             return results
         
