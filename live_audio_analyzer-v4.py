@@ -1433,27 +1433,34 @@ class VoiceReactiveLiveAudioAnalyzer:
         # Separator line
         pygame.draw.line(self.screen, (60, 70, 90), (0, header_height), (self.width, header_height), 2)
         
-        # Enhanced spectrum visualization with voice reactivity
-        vis_height = self.height - header_height
+        # Enhanced spectrum visualization with voice reactivity and scales
+        # Reserve space for scales
+        scale_margin_left = 60   # Space for amplitude scale
+        scale_margin_bottom = 40 # Space for frequency scale
+        
+        vis_height = self.height - header_height - scale_margin_bottom
+        vis_width = self.width - scale_margin_left
         center_y = header_height + vis_height // 2
-        max_bar_height = (vis_height // 2) - 30
+        max_bar_height = (vis_height // 2) - 20
         
-        bar_width = self.width / self.bars
+        bar_width = vis_width / self.bars
+        spectrum_start_x = scale_margin_left
         
-        # Enhanced flash effects for voice and beats
+        # Enhanced flash effects for voice and beats (adjusted for scales)
+        flash_width = vis_width // 3
         if kick_flash_active or (hasattr(self, 'drum_info') and self.drum_info['kick'].get('display_strength', 0) > 0.1):
             kick_alpha = 60 if kick_flash_active else int(30 * self.drum_info['kick'].get('display_strength', 0))
-            kick_flash_surface = pygame.Surface((self.width // 3, vis_height))
+            kick_flash_surface = pygame.Surface((flash_width, vis_height))
             kick_flash_surface.set_alpha(kick_alpha)
             kick_flash_surface.fill((kick_alpha, kick_alpha // 4, 0))
-            self.screen.blit(kick_flash_surface, (0, header_height))
+            self.screen.blit(kick_flash_surface, (spectrum_start_x, header_height))
         
         if snare_flash_active or (hasattr(self, 'drum_info') and self.drum_info['snare'].get('display_strength', 0) > 0.1):
             snare_alpha = 60 if snare_flash_active else int(30 * self.drum_info['snare'].get('display_strength', 0))
-            snare_flash_surface = pygame.Surface((self.width // 3, vis_height))
+            snare_flash_surface = pygame.Surface((flash_width, vis_height))
             snare_flash_surface.set_alpha(snare_alpha)
             snare_flash_surface.fill((0, snare_alpha // 3, snare_alpha // 2))
-            self.screen.blit(snare_flash_surface, (self.width // 3, header_height))
+            self.screen.blit(snare_flash_surface, (spectrum_start_x + flash_width, header_height))
         
         if voice_flash_active or singing_flash_active:
             voice_alpha = 40 if voice_flash_active else 0
@@ -1461,19 +1468,25 @@ class VoiceReactiveLiveAudioAnalyzer:
             total_alpha = voice_alpha + singing_alpha
             
             if total_alpha > 0:
-                voice_flash_surface = pygame.Surface((self.width // 3, vis_height))
+                voice_flash_surface = pygame.Surface((flash_width, vis_height))
                 voice_flash_surface.set_alpha(total_alpha)
                 voice_flash_surface.fill((total_alpha // 2, total_alpha, total_alpha // 3))
-                self.screen.blit(voice_flash_surface, (2 * self.width // 3, header_height))
+                self.screen.blit(voice_flash_surface, (spectrum_start_x + 2 * flash_width, header_height))
+        
+        # Draw amplitude scale (left side)
+        self.draw_amplitude_scale(scale_margin_left, header_height, vis_height, max_bar_height)
+        
+        # Draw frequency scale (bottom)
+        self.draw_frequency_scale(spectrum_start_x, header_height + vis_height, vis_width)
         
         # Draw center line
-        pygame.draw.line(self.screen, (40, 50, 60), (0, center_y), (self.width, center_y), 1)
+        pygame.draw.line(self.screen, (40, 50, 60), (spectrum_start_x, center_y), (self.width, center_y), 1)
         
         # Draw enhanced spectrum bars with voice and beat reactivity
         for i in range(self.bars):
             if self.bar_heights[i] > 0.01:
                 height = int(self.bar_heights[i] * max_bar_height)
-                x = int(i * bar_width)
+                x = spectrum_start_x + int(i * bar_width)
                 width = int(bar_width) + 1
                 
                 color = self.colors[i]
@@ -1515,6 +1528,80 @@ class VoiceReactiveLiveAudioAnalyzer:
                 # Lower bar (mirrored, slightly darker)
                 lower_color = tuple(int(c * 0.75) for c in color)
                 pygame.draw.rect(self.screen, lower_color, (x, center_y, width, height))
+    
+    def draw_amplitude_scale(self, margin_left: int, vis_start_y: int, vis_height: int, max_bar_height: int):
+        """Draw amplitude scale on the left side"""
+        scale_color = (120, 130, 140)
+        center_y = vis_start_y + vis_height // 2
+        
+        # Draw scale line
+        pygame.draw.line(self.screen, scale_color, (margin_left - 5, vis_start_y), (margin_left - 5, vis_start_y + vis_height), 1)
+        
+        # Draw amplitude markers (0%, 25%, 50%, 75%, 100%)
+        amplitude_levels = [0, 0.25, 0.5, 0.75, 1.0]
+        for level in amplitude_levels:
+            # Upper scale (positive amplitude)
+            y_pos = center_y - int(level * max_bar_height)
+            pygame.draw.line(self.screen, scale_color, (margin_left - 8, y_pos), (margin_left - 2, y_pos), 1)
+            
+            # Lower scale (mirrored)
+            y_pos_lower = center_y + int(level * max_bar_height)
+            pygame.draw.line(self.screen, scale_color, (margin_left - 8, y_pos_lower), (margin_left - 2, y_pos_lower), 1)
+            
+            # Labels (only for upper scale to avoid clutter)
+            if level > 0:  # Skip 0% label at center
+                label = self.font_tiny.render(f"{int(level * 100)}%", True, scale_color)
+                label_rect = label.get_rect()
+                self.screen.blit(label, (margin_left - 35, y_pos - label_rect.height // 2))
+        
+        # Center line label
+        center_label = self.font_tiny.render("0%", True, scale_color)
+        center_rect = center_label.get_rect()
+        self.screen.blit(center_label, (margin_left - 30, center_y - center_rect.height // 2))
+    
+    def draw_frequency_scale(self, spectrum_start_x: int, scale_y: int, vis_width: int):
+        """Draw frequency scale at the bottom"""
+        scale_color = (120, 130, 140)
+        
+        # Draw scale line
+        pygame.draw.line(self.screen, scale_color, (spectrum_start_x, scale_y), (spectrum_start_x + vis_width, scale_y), 1)
+        
+        # Calculate key frequency markers
+        # Use logarithmic spacing for better frequency representation
+        key_frequencies = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]  # Hz
+        
+        for freq in key_frequencies:
+            # Find the corresponding bar position for this frequency
+            bar_position = self.find_bar_position_for_frequency(freq)
+            if bar_position is not None and 0 <= bar_position < self.bars:
+                x_pos = spectrum_start_x + int((bar_position / self.bars) * vis_width)
+                
+                # Draw tick mark
+                pygame.draw.line(self.screen, scale_color, (x_pos, scale_y), (x_pos, scale_y + 8), 1)
+                
+                # Draw frequency label
+                if freq >= 1000:
+                    freq_text = f"{freq // 1000}k" if freq % 1000 == 0 else f"{freq / 1000:.1f}k"
+                else:
+                    freq_text = str(freq)
+                
+                label = self.font_tiny.render(freq_text, True, scale_color)
+                label_rect = label.get_rect()
+                # Center the label under the tick mark
+                self.screen.blit(label, (x_pos - label_rect.width // 2, scale_y + 10))
+    
+    def find_bar_position_for_frequency(self, target_freq: float) -> Optional[int]:
+        """Find which bar corresponds to a given frequency"""
+        for i, indices in enumerate(self.band_indices):
+            if len(indices) > 0:
+                freq_range = self.get_frequency_range_for_bar(i)
+                if freq_range[0] <= target_freq <= freq_range[1]:
+                    return i
+                # If frequency is close to the range, return this bar
+                center_freq = (freq_range[0] + freq_range[1]) / 2
+                if abs(target_freq - center_freq) < (freq_range[1] - freq_range[0]) / 2:
+                    return i
+        return None
     
     def run(self):
         """Main enhanced analysis loop"""
