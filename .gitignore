@@ -1,0 +1,139 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+PIPFILE.lock
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Audio Debug Output
+debug_output/
+*.wav
+*.mp3
+*.aup
+*.csv
+*.json
+frame_*.csv
+frame_*.json
+
+# Log Files
+*.log
+visualizer_errors.log
+audio_debug*.txt
+
+# Test Files  
+test_*.py
+debug_*.py
+compare_*.py
+verify_*.py
+quick_*.py
+simple_*.py
+
+# Backup Files
+*.backup
+*_backup/
+*_backup.py
+
+# Screenshots
+*.png
+spectrum_*.png
+
+# System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary Files
+temp_*
+*.tmp
+
+# Audio Interface Scripts
+switch-to-*.sh
+setup_audio_monitor.sh
+setup_monitors.py
+
+# Documentation that's not needed
+ADAPTIVE_MUSIC_PROFILES.md
+AUDIO_VISUALIZER_GUIDE.md
+COMPLETE_SOLUTION_SUMMARY.md
+COMPREHENSIVE_HELP_SYSTEM.md
+CONTROL_PANEL_FIX.md
+FINAL_SOLUTION.md
+HELP_MENU_IMPROVEMENTS.md
+KEYBOARD_CONTROLS.md
+MIRRORED_DISPLAY_FIX.md
+OFF_SCREEN_RENDERING_ANALYSIS.md
+PERSISTENT_OFF_SCREEN_ISSUE.md
+PROFESSIONAL_VISUALIZER_GUIDE.md
+PROJECT_PLAN_VOICE_ENHANCED.md
+README_ENHANCED_TEST.md
+SEPARATE_WINDOWS_GUIDE.md
+SOLUTION_IMPLEMENTATION_SUMMARY.md
+V2_IMPLEMENTATION_SUMMARY.md
+
+# Service Files
+*.service
+*.desktop
+
+# Audio Processing Files
+add_missing_methods.py
+audio_*.py
+config_manager.py
+debug_*.py
+fix_*.py
+integrate_*.py
+live_audio_analyzer.py
+live_audio_analyzer-v3.py
+pulse_*.py
+spectrum_visualizer*.py
+visualizer_app.py
+audio_engine.py
+audio_capture.py
+gpu_renderer.py
+main.py
+run_*.py
+run_*.sh
+setup.py
+simple_*.py
+test_*.py
+visualizer.js
+index.html
+styles.css
+requirements_enhanced.txt
+requirements_professional.txt
+requirements.txt
+
+# Only keep essential program files and documentation
