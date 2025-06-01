@@ -31,7 +31,7 @@ from industry_voice_detection import IndustryVoiceDetector
 # Audio analysis constants
 SAMPLE_RATE = 48000
 CHUNK_SIZE = 512
-BARS_DEFAULT = 256
+BARS_DEFAULT = 512
 BARS_MAX = 1024
 MAX_FREQ = 20000
 FFT_SIZE = 2048
@@ -951,10 +951,11 @@ class VoiceReactiveLiveAudioAnalyzer:
         freq_min = 20
         freq_max = min(MAX_FREQ, self.freqs[-1])
         
-        # Enhanced allocation for better low-end resolution
-        low_end_bars = int(self.bars * 0.5)    # 50% for low end (20-500 Hz) - increased resolution
-        mid_bars = int(self.bars * 0.35)       # 35% for mids/voice (500-5000 Hz)
-        high_bars = self.bars - low_end_bars - mid_bars  # 15% for highs (5000+ Hz)
+        # Enhanced allocation with 512 total bars for maximum low-end detail
+        # Keep same absolute resolution for mids/highs, double the low-end resolution
+        low_end_bars = int(self.bars * 0.6)    # 60% for low end (20-500 Hz) - maximum resolution
+        mid_bars = int(self.bars * 0.3)        # 30% for mids/voice (500-5000 Hz) - maintains ~154 bars
+        high_bars = self.bars - low_end_bars - mid_bars  # 10% for highs (5000+ Hz) - maintains ~52 bars
         
         # Create frequency points with enhanced low-end detail
         # Sub-bass and bass get linear spacing for maximum resolution
@@ -1001,26 +1002,26 @@ class VoiceReactiveLiveAudioAnalyzer:
         for i in range(self.bars):
             hue = i / self.bars
             
-            # Enhanced color scheme matching new frequency allocation
-            if hue < 0.5:  # Low-end region (20-500 Hz) - enhanced resolution with warm colors
-                progress = hue / 0.5
-                if hue < 0.2:  # Sub-bass (20-80 Hz) - deep reds
-                    sub_progress = hue / 0.2
+            # Enhanced color scheme for 512 bars with 60/30/10 allocation
+            if hue < 0.6:  # Low-end region (20-500 Hz) - maximum resolution with warm colors
+                progress = hue / 0.6
+                if hue < 0.24:  # Sub-bass (20-80 Hz) - deep reds (40% of 60%)
+                    sub_progress = hue / 0.24
                     r = 255
                     g = int(sub_progress * 60)
                     b = int(sub_progress * 30)
-                else:  # Bass (80-500 Hz) - red to orange
-                    bass_progress = (hue - 0.2) / 0.3
+                else:  # Bass (80-500 Hz) - red to orange (60% of 60%)
+                    bass_progress = (hue - 0.24) / 0.36
                     r = 255
                     g = int(60 + bass_progress * 120)
                     b = int(30 + bass_progress * 50)
-            elif hue < 0.85:  # Mid/voice region (500-5000 Hz) - bright, varied colors
-                progress = (hue - 0.5) / 0.35
+            elif hue < 0.9:  # Mid/voice region (500-5000 Hz) - bright, varied colors
+                progress = (hue - 0.6) / 0.3
                 r = int((1 - progress) * 255 + progress * 120)
                 g = 255
                 b = int(progress * 255)
             else:  # High region (5000+ Hz) - cool colors
-                progress = (hue - 0.85) / 0.15
+                progress = (hue - 0.9) / 0.1
                 r = int(progress * 180)
                 g = int((1 - progress) * 255 + progress * 220)
                 b = 255
@@ -1782,7 +1783,7 @@ def main():
     parser = argparse.ArgumentParser(description='Voice & Beat Analyzer v4 - Industry-Grade Detection')
     parser.add_argument('--width', type=int, default=1600, help='Window width')
     parser.add_argument('--height', type=int, default=900, help='Window height')
-    parser.add_argument('--bars', type=int, default=256, help='Number of spectrum bars')
+    parser.add_argument('--bars', type=int, default=512, help='Number of spectrum bars')
     parser.add_argument('--source', type=str, default=None, help='PipeWire source name')
     
     args = parser.parse_args()
