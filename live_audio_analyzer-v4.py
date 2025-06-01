@@ -1530,60 +1530,77 @@ class VoiceReactiveLiveAudioAnalyzer:
                 pygame.draw.rect(self.screen, lower_color, (x, center_y, width, height))
     
     def draw_amplitude_scale(self, margin_left: int, vis_start_y: int, vis_height: int, max_bar_height: int):
-        """Draw amplitude scale on the left side"""
+        """Draw amplitude scale on the left side for mirrored display"""
         scale_color = (120, 130, 140)
         center_y = vis_start_y + vis_height // 2
         
         # Draw scale line
         pygame.draw.line(self.screen, scale_color, (margin_left - 5, vis_start_y), (margin_left - 5, vis_start_y + vis_height), 1)
         
-        # Draw amplitude markers (0%, 25%, 50%, 75%, 100%)
-        amplitude_levels = [0, 0.25, 0.5, 0.75, 1.0]
+        # Draw amplitude markers for mirrored display (25%, 50%, 75%, 100% from center)
+        amplitude_levels = [0.25, 0.5, 0.75, 1.0]
         for level in amplitude_levels:
-            # Upper scale (positive amplitude)
+            # Upper scale (from center upward)
             y_pos = center_y - int(level * max_bar_height)
             pygame.draw.line(self.screen, scale_color, (margin_left - 8, y_pos), (margin_left - 2, y_pos), 1)
             
-            # Lower scale (mirrored)
+            # Lower scale (from center downward)
             y_pos_lower = center_y + int(level * max_bar_height)
             pygame.draw.line(self.screen, scale_color, (margin_left - 8, y_pos_lower), (margin_left - 2, y_pos_lower), 1)
             
-            # Labels (only for upper scale to avoid clutter)
-            if level > 0:  # Skip 0% label at center
-                label = self.font_tiny.render(f"{int(level * 100)}%", True, scale_color)
-                label_rect = label.get_rect()
-                self.screen.blit(label, (margin_left - 35, y_pos - label_rect.height // 2))
+            # Labels for upper scale
+            label = self.font_tiny.render(f"{int(level * 100)}%", True, scale_color)
+            label_rect = label.get_rect()
+            self.screen.blit(label, (margin_left - 35, y_pos - label_rect.height // 2))
+            
+            # Labels for lower scale (mirrored)
+            label_lower = self.font_tiny.render(f"{int(level * 100)}%", True, scale_color)
+            label_rect_lower = label_lower.get_rect()
+            self.screen.blit(label_lower, (margin_left - 35, y_pos_lower - label_rect_lower.height // 2))
         
-        # Center line label
+        # Center line label (0% at center)
         center_label = self.font_tiny.render("0%", True, scale_color)
         center_rect = center_label.get_rect()
         self.screen.blit(center_label, (margin_left - 30, center_y - center_rect.height // 2))
     
     def draw_frequency_scale(self, spectrum_start_x: int, scale_y: int, vis_width: int):
-        """Draw frequency scale at the bottom"""
+        """Draw frequency scale showing frequency ranges for each section"""
         scale_color = (120, 130, 140)
         
         # Draw scale line
         pygame.draw.line(self.screen, scale_color, (spectrum_start_x, scale_y), (spectrum_start_x + vis_width, scale_y), 1)
         
-        # Calculate key frequency markers
-        # Use logarithmic spacing for better frequency representation
-        key_frequencies = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]  # Hz
+        # Draw frequency markers at regular intervals showing the actual frequency ranges
+        num_markers = 8  # Number of frequency markers to show
         
-        for freq in key_frequencies:
-            # Find the corresponding bar position for this frequency
-            bar_position = self.find_bar_position_for_frequency(freq)
-            if bar_position is not None and 0 <= bar_position < self.bars:
-                x_pos = spectrum_start_x + int((bar_position / self.bars) * vis_width)
+        for i in range(num_markers + 1):
+            # Calculate position across the spectrum
+            bar_position = int((i / num_markers) * self.bars)
+            if bar_position >= self.bars:
+                bar_position = self.bars - 1
+                
+            x_pos = spectrum_start_x + int((i / num_markers) * vis_width)
+            
+            # Get the actual frequency range for this bar position
+            freq_range = self.get_frequency_range_for_bar(bar_position)
+            if freq_range[0] > 0 and freq_range[1] > 0:
+                # Use the center frequency of the range
+                center_freq = (freq_range[0] + freq_range[1]) / 2
                 
                 # Draw tick mark
                 pygame.draw.line(self.screen, scale_color, (x_pos, scale_y), (x_pos, scale_y + 8), 1)
                 
-                # Draw frequency label
-                if freq >= 1000:
-                    freq_text = f"{freq // 1000}k" if freq % 1000 == 0 else f"{freq / 1000:.1f}k"
+                # Format frequency label based on value
+                if center_freq >= 1000:
+                    if center_freq >= 10000:
+                        freq_text = f"{center_freq / 1000:.0f}k"
+                    else:
+                        freq_text = f"{center_freq / 1000:.1f}k"
                 else:
-                    freq_text = str(freq)
+                    if center_freq >= 100:
+                        freq_text = f"{center_freq:.0f}"
+                    else:
+                        freq_text = f"{center_freq:.1f}"
                 
                 label = self.font_tiny.render(freq_text, True, scale_color)
                 label_rect = label.get_rect()
