@@ -947,21 +947,37 @@ class VoiceReactiveLiveAudioAnalyzer:
         print("  P: Pitch detection debug")
     
     def _create_band_mapping(self):
-        """Create frequency band mapping optimized for voice and beat detection"""
+        """Create frequency band mapping with enhanced low-end resolution"""
         freq_min = 20
         freq_max = min(MAX_FREQ, self.freqs[-1])
         
-        # Optimized for both voice and beats
-        bass_bars = int(self.bars * 0.4)    # 40% for bass/drums
-        voice_bars = int(self.bars * 0.4)   # 40% for voice (80-5000 Hz)
-        high_bars = self.bars - bass_bars - voice_bars  # 20% for highs
+        # Enhanced allocation for better low-end resolution
+        low_end_bars = int(self.bars * 0.5)    # 50% for low end (20-500 Hz) - increased resolution
+        mid_bars = int(self.bars * 0.35)       # 35% for mids/voice (500-5000 Hz)
+        high_bars = self.bars - low_end_bars - mid_bars  # 15% for highs (5000+ Hz)
         
-        # Create frequency points
-        bass_freqs = np.linspace(freq_min, 500, bass_bars + 1)
-        voice_freqs = np.logspace(np.log10(500), np.log10(5000), voice_bars + 1)  # Voice range
+        # Create frequency points with enhanced low-end detail
+        # Sub-bass and bass get linear spacing for maximum resolution
+        sub_bass_bars = int(low_end_bars * 0.4)  # 40% of low-end for sub-bass (20-80 Hz)
+        bass_bars = low_end_bars - sub_bass_bars  # 60% for bass (80-500 Hz)
+        
+        # High-resolution sub-bass (20-80 Hz) - linear for maximum detail
+        sub_bass_freqs = np.linspace(freq_min, 80, sub_bass_bars + 1)
+        
+        # High-resolution bass (80-500 Hz) - slightly compressed linear
+        bass_freqs = np.linspace(80, 500, bass_bars + 1)
+        
+        # Logarithmic spacing for mids/voice and highs to maintain perceptual balance
+        mid_freqs = np.logspace(np.log10(500), np.log10(5000), mid_bars + 1)
         high_freqs = np.logspace(np.log10(5000), np.log10(freq_max), high_bars + 1)
         
-        all_freqs = np.concatenate([bass_freqs[:-1], voice_freqs[:-1], high_freqs])
+        # Combine all frequency ranges
+        all_freqs = np.concatenate([
+            sub_bass_freqs[:-1],  # 20-80 Hz (high resolution)
+            bass_freqs[:-1],      # 80-500 Hz (high resolution) 
+            mid_freqs[:-1],       # 500-5000 Hz (logarithmic)
+            high_freqs            # 5000+ Hz (logarithmic)
+        ])
         
         band_indices = []
         for i in range(len(all_freqs) - 1):
@@ -980,24 +996,31 @@ class VoiceReactiveLiveAudioAnalyzer:
         return band_indices
     
     def _generate_colors(self):
-        """Generate enhanced color gradient for voice and beat visualization"""
+        """Generate enhanced color gradient matching the new frequency allocation"""
         colors = []
         for i in range(self.bars):
             hue = i / self.bars
             
-            # Enhanced color scheme for voice and beats
-            if hue < 0.4:  # Bass/drum region - warm colors
-                progress = hue / 0.4
-                r = 255
-                g = int(progress * 180)
-                b = int(progress * 60)
-            elif hue < 0.8:  # Voice region - bright, varied colors
-                progress = (hue - 0.4) / 0.4
+            # Enhanced color scheme matching new frequency allocation
+            if hue < 0.5:  # Low-end region (20-500 Hz) - enhanced resolution with warm colors
+                progress = hue / 0.5
+                if hue < 0.2:  # Sub-bass (20-80 Hz) - deep reds
+                    sub_progress = hue / 0.2
+                    r = 255
+                    g = int(sub_progress * 60)
+                    b = int(sub_progress * 30)
+                else:  # Bass (80-500 Hz) - red to orange
+                    bass_progress = (hue - 0.2) / 0.3
+                    r = 255
+                    g = int(60 + bass_progress * 120)
+                    b = int(30 + bass_progress * 50)
+            elif hue < 0.85:  # Mid/voice region (500-5000 Hz) - bright, varied colors
+                progress = (hue - 0.5) / 0.35
                 r = int((1 - progress) * 255 + progress * 120)
                 g = 255
                 b = int(progress * 255)
-            else:  # High region - cool colors
-                progress = (hue - 0.8) / 0.2
+            else:  # High region (5000+ Hz) - cool colors
+                progress = (hue - 0.85) / 0.15
                 r = int(progress * 180)
                 g = int((1 - progress) * 255 + progress * 220)
                 b = 255
